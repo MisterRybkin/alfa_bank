@@ -1,5 +1,6 @@
 package ru.rybkin.alfa_bank;
 
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import ru.rybkin.alfa_bank.feign.transfer.OneGifDTO;
 import java.util.Calendar;
@@ -9,7 +10,7 @@ import java.util.Map;
 public class SystemUtils {
     private static final String HISTORICAL = "%04d-%02d-%02d.json";
 
-    public String historicalDate(Calendar calendar) {
+    public String historicalDate(@NonNull Calendar calendar) throws NullPointerException {
         int day = calendar.get(Calendar.DAY_OF_MONTH);
         int month = calendar.get(Calendar.MONTH) + 1;
         int year = calendar.get(Calendar.YEAR);
