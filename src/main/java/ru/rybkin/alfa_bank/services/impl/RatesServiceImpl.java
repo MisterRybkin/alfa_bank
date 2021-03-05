@@ -57,10 +57,14 @@ public class RatesServiceImpl implements RatesService {
 
         Calendar calendar = new GregorianCalendar();
         calendar.roll(Calendar.DAY_OF_MONTH, -1);
-        String historical = SystemUtils.historicalDate(calendar);
+        String historical;
+        try {
+            historical = SystemUtils.historicalDate(calendar);
+        } catch (NullPointerException ex) {
+            return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
         ResponseFeignRatesDTO responseHistorical = ratesFeignClient.getHistorical(historical, appId);
-
         ResponseFeignRatesDTO responseLatest = ratesFeignClient.getLatest(appId);
         
         Map<String, Double> yesterdayRates = responseHistorical.getRates();
@@ -75,7 +79,6 @@ public class RatesServiceImpl implements RatesService {
             responseGIF = gifFeignClient.getGiphy(resource, endpoing, api_key, broke, limit, offset, rating, lang);
         }
 
-        Random random = new Random();
         ArrayList<OneGifDTO> arrayGifs = responseGIF.getData();
         if (arrayGifs.isEmpty()) {
             return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -83,15 +86,17 @@ public class RatesServiceImpl implements RatesService {
 
         OneGifDTO oneGif;
         try {
-            oneGif = arrayGifs.get(random.nextInt(10));
+            oneGif = arrayGifs.get(new Random().nextInt(10));
         } catch (IndexOutOfBoundsException ex) {
             oneGif = arrayGifs.get(0);
         }
 
         //String url = SystemUtils.getURL(oneGif, "original", "mp4");
 
-        Response response = downloadGIF.downloadGIF(oneGif.getId()/*oneGif.id*/, oneGif.getType()/*oneGif.type*/);
-        Response.Body body = response.body();
+        Response.Body body = downloadGIF
+                .downloadGIF(oneGif.getId()/*oneGif.id*/, oneGif.getType()/*oneGif.type*/)
+                .body();
+
         byte[] gif;
         try (InputStream inputStream = body.asInputStream()) {
             gif = inputStream.readAllBytes();
